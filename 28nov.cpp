@@ -1,200 +1,128 @@
 #include <iostream>
 using namespace std;
 
-class List {
-public:
-    List();
-    ~List();
-
-    void push_front(const int& value);
-    void push_back(const int& value);
-    void insert(unsigned int position, const int& value);
-    void pop_front();
-    void pop_back();
-    void erase(unsigned int position);
-    void clear();
-
-    void print() const;
-
-    int& front();
-    int& back();
-    int& value_at(unsigned int position);
-    bool empty() const;
-    unsigned int size() const;
-
+class DoublyLinkedList
+{
 private:
-    struct Node {
+    // 1. Estructura del nodo
+    struct Node
+    {
         int value;
-        Node* next;
-        Node* prev;
+        Node* prev; //puntero al nodo anterior
+        Node* next;//puntero al nodo siguiente
     };
+    // 2. Atributos de la lista
+    Node* first; // puntero al primer nodo
+    Node* last;  // puntero al ultimo nodo
+    unsigned int num_elems; // num de elementos de la lista
 
-    Node* first = nullptr;
-    Node* last = nullptr;
-    unsigned int num_elems = 0;
-};
+public:
+    // 3. Constructor
+    DoublyLinkedList() : first(nullptr), last(nullptr), num_elems(0) {} //la lista esta vacia, por eso es nullptr
 
-List::List() : first(nullptr), last(nullptr), num_elems(0) {}
 
-List::~List() {
-    clear();
-}
-
-void List::push_front(const int& value) {
-    Node* new_node = new Node{ value, first, nullptr };
-    if (first) {
-        first->prev = new_node;
-    }
-    else {
-        last = new_node;  
-    }
-    first = new_node;
-    num_elems++;
-}
-
-void List::push_back(const int& value) {
-    Node* new_node = new Node{ value, nullptr, last };
-    if (last) {
-        last->next = new_node;
-    }
-    else {
-        first = new_node; 
-    }
-    last = new_node;
-    num_elems++;
-}
-
-void List::insert(unsigned int position, const int& value) {
-    if (position == 0) {
-        push_front(value);
-    }
-    else if (position >= num_elems) {
-        push_back(value);
-    }
-    else {
-        Node* new_node = new Node{ value, nullptr, nullptr };
-        Node* current = first;
-        for (unsigned int i = 0; i < position; i++) {
-            current = current->next;
+    // Poner elemento al principio de la lista
+    void push_front(const int& value)
+    {
+        if (num_elems == 0)  //si la lista esta vacia, se pone el elemento desde el main ( crea un nodo), y el anterior y el posterior estan vacios
+        {
+            first = last = new Node{ value, nullptr, nullptr };
         }
-        new_node->next = current;
-        new_node->prev = current->prev;
-        if (current->prev) {
-            current->prev->next = new_node;
+        else //si hay elementos, crea un nodo con el valor del main, el anterior esta vacio, porque llo pone al pprincipio y el posterior es el first
+        {
+            Node* node = new Node{ value, nullptr, first };
+            first->prev = node; // el first pasa a ser el prev, el priemr elemento de la lisat
+            first = node;
         }
-        current->prev = new_node;
+        num_elems++; //se suam un elemento al numero
+    }
+
+    // lo mismo pero el elemento va al final
+    void push_back(const int& value)
+    {
+        if (num_elems == 0)
+        {
+            first = last = new Node{ value, nullptr, nullptr };
+        }
+        else
+        {
+            Node* node = new Node{ value, last, nullptr };
+            last->next = node;
+            last = node;
+        }
         num_elems++;
     }
-}
 
-void List::pop_front() {
-    if (first) {
-        Node* temp = first;
-        first = first->next;
-        if (first) {
-            first->prev = nullptr;
+    // insertat en una posicion especifica
+    void insert(unsigned int position, const int& value)
+    {
+        if (position > num_elems)
+        {
+            cout << "Position out of range." << endl; //si la posicion supera la lista
+            return;
         }
-        else {
-            last = nullptr;  
-        }
-        delete temp;
-        num_elems--;
-    }
-}
 
-void List::pop_back() {
-    if (last) {
-        Node* temp = last;
-        last = last->prev;
-        if (last) {
-            last->next = nullptr;
+        if (position == 0) //si la quiere poner en la primera posicion llama a push_front
+        {
+            push_front(value);
+            return;
         }
-        else {
-            first = nullptr;  
+        else if (position == num_elems) //si la quiere poner en la ultima posicion llama a push_back
+        {
+            push_back(value);
+            return;
         }
-        delete temp;
-        num_elems--;
-    }
-}
 
-void List::erase(unsigned int position) {
-    if (position < num_elems) {
         Node* current = first;
-        for (unsigned int i = 0; i < position; i++) {
+        for (unsigned int i = 0; i < position - 1; i++)
+        {
             current = current->next;
         }
-        if (current->prev) {
-            current->prev->next = current->next;
-        }
-        else {
-            first = current->next;  
-        }
-        if (current->next) {
-            current->next->prev = current->prev;
-        }
-        else {
-            last = current->prev;  
-        }
-        delete current;
-        num_elems--;
+
+        Node* node = new Node{ value, current, current->next }; //preguntar current
+        current->next->prev = node;
+        current->next = node;
+
+        num_elems++;
     }
-}
 
-void List::clear() {
-    while (first) {
-        pop_front();
+    // preguntar
+    void print()
+    {
+        Node* current = first;
+        while (current)
+        {
+            cout << current->value << " ";
+            current = current->next;
+        }
+        cout << endl;
     }
-}
+};
 
-void List::print() const {
-    Node* current = first;
-    while (current) {
-        cout << current->value << " ";
-        current = current->next;
-    }
-    cout << endl;
-}
+int main()
+{
+    DoublyLinkedList list;
 
-int& List::front() {
-    return first->value;
-}
+    // Insert elements and print the list after each operation
+    cout << "Inserting 10 at the front:" << endl;
+    list.push_front(10);
+    list.print();
 
-int& List::back() {
-    return last->value;
-}
+    cout << "Inserting 20 at the back:" << endl;
+    list.push_back(20);
+    list.print();
 
-int& List::value_at(unsigned int position) {
-    Node* current = first;
-    for (unsigned int i = 0; i < position; i++) {
-        current = current->next;
-    }
-    return current->value;
-}
+    cout << "Inserting 30 at position 1:" << endl;
+    list.insert(1, 30);
+    list.print();
 
-bool List::empty() const {
-    return first == nullptr;
-}
+    cout << "Inserting 40 at position 0 (front):" << endl;
+    list.insert(0, 40);
+    list.print();
 
-unsigned int List::size() const {
-    return num_elems;
-}
+    cout << "Inserting 50 at position 4 (back):" << endl;
+    list.insert(4, 50);
+    list.print();
 
-int main() {
-    List lista;
-
-    lista.insert(0, 10);  
-    lista.print();
-
-    lista.insert(1, 20);  
-    lista.print();
-
-    lista.insert(1, 15);  
-    lista.print();
-
-    lista.insert(2, 25);  
-    lista.print();
-
-    lista.insert(0, 5);   
-    lista.print();
-
+    return 0;
 }
